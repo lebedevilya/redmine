@@ -387,6 +387,12 @@ Rails.application.routes.draw do
 
   match '/admin/projects_context_menu', :to => 'context_menus#projects', :as => 'projects_context_menu', :via => [:get, :post]
 
+  namespace :admin do
+    resources :personal_access_tokens, :only => [:index] do
+      post 'revoke', :on => :member
+    end
+  end
+
   resources :auth_sources do
     member do
       get 'test_connection', :as => 'try_connection'

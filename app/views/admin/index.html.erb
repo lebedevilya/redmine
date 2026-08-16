@@ -3,6 +3,7 @@
 <div id="admin-index">
   <%= render :partial => 'no_data' if @no_configuration_data %>
   <%= render :partial => 'menu' %>
+  <p><%= link_to l(:label_personal_access_token_plural), admin_personal_access_tokens_path %></p>
 </div>
 
 <% html_title(l(:label_administration)) -%>
