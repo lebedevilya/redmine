@@ -193,4 +193,39 @@ class PersonalAccessTokenTest < ActiveSupport::TestCase
     token.update_column(:scopes, YAML.dump([]))
     assert_not token.reload.scoped?, 'empty scope array must not be treated as a scope: it fails open in Role#allowed_permissions'
   end
+
+  def test_string_scopes_are_coerced_to_symbols
+    token, = PersonalAccessToken.generate!(@user, :name => 'ci', :expires_on => 30.days.from_now.to_date,
+                                            :scopes => ['view_issues'])
+    assert_equal [:view_issues], token.scopes
+    assert token.scoped?, 'string scopes must not be silently discarded into an unscoped, full-access token'
+  end
+
+  def test_mixed_string_and_symbol_scopes_are_coerced_and_deduplicated
+    token, = PersonalAccessToken.generate!(@user, :name => 'ci', :expires_on => 30.days.from_now.to_date,
+                                            :scopes => ['view_issues', :view_issues, :edit_issues])
+    assert_equal [:view_issues, :edit_issues], token.scopes
+    assert token.scopes.all?(Symbol)
+  end
+
+  def test_blank_string_scopes_still_yield_empty_and_unscoped
+    token, = PersonalAccessToken.generate!(@user, :name => 'ci', :expires_on => 30.days.from_now.to_date,
+                                            :scopes => ['', ''])
+    assert_equal [], token.scopes
+    assert_not token.scoped?
+
+    token2, = PersonalAccessToken.generate!(@user, :name => 'ci2', :expires_on => 30.days.from_now.to_date,
+                                             :scopes => [])
+    assert_equal [], token2.scopes
+    assert_not token2.scoped?
+  end
+
+  def test_string_scopes_survive_a_database_round_trip_as_symbols
+    token, = PersonalAccessToken.generate!(@user, :name => 'ci', :expires_on => 30.days.from_now.to_date,
+                                            :scopes => ['view_issues'])
+    reloaded = PersonalAccessToken.find(token.id)
+    assert_equal [:view_issues], reloaded.scopes
+    assert reloaded.scopes.all?(Symbol)
+    assert reloaded.scoped?
+  end
 end
