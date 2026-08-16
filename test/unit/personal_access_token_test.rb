@@ -176,4 +176,21 @@ class PersonalAccessTokenTest < ActiveSupport::TestCase
       assert token.valid?
     end
   end
+
+  def test_scopes_deserialize_to_symbols_not_strings
+    token = PersonalAccessToken.find(1)
+    token.update_column(:scopes, YAML.dump([:view_issues]))
+    assert_equal [:view_issues], token.reload.scopes
+    assert token.reload.scopes.all?(Symbol), 'scopes must be symbols or Array#& in Role fails'
+  end
+
+  def test_unscoped_token_reports_not_scoped
+    assert_not PersonalAccessToken.find(1).scoped?
+  end
+
+  def test_empty_scopes_is_not_treated_as_scoped
+    token = PersonalAccessToken.find(1)
+    token.update_column(:scopes, YAML.dump([]))
+    assert_not token.reload.scoped?, 'empty scope array must not be treated as a scope: it fails open in Role#allowed_permissions'
+  end
 end

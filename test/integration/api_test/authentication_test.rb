@@ -229,4 +229,36 @@ class Redmine::ApiTest::AuthenticationTest < Redmine::ApiTest::Base
     assert_response :ok
     assert_not_nil PersonalAccessToken.find(1).last_used_at
   end
+
+  def test_scoped_pat_is_accepted_on_an_in_scope_endpoint
+    PersonalAccessToken.find(1).update_column(:scopes, YAML.dump([:view_issues]))
+    get '/issues.xml', :headers => {'X-Redmine-API-Key' => PAT_VALUE}
+    assert_response :ok
+  end
+
+  def test_scoped_pat_is_refused_on_an_out_of_scope_endpoint
+    PersonalAccessToken.find(1).update_column(:scopes, YAML.dump([:view_issues]))
+    post '/time_entries.xml',
+         :params  => {:time_entry => {:issue_id => 1, :hours => 1}},
+         :headers => {'X-Redmine-API-Key' => PAT_VALUE}
+    assert_response :forbidden
+  end
+
+  def test_unscoped_pat_keeps_full_permissions
+    admin_token, plaintext = PersonalAccessToken.generate!(
+      User.find(1), :name => 'admin token', :expires_on => 30.days.from_now.to_date
+    )
+    assert_not admin_token.scoped?
+    get '/users.xml', :headers => {'X-Redmine-API-Key' => plaintext}
+    assert_response :ok, 'an unscoped token must behave exactly like a legacy API key'
+  end
+
+  def test_empty_scope_array_does_not_grant_full_permissions
+    token, plaintext = PersonalAccessToken.generate!(
+      User.find(1), :name => 'empty scope', :expires_on => 30.days.from_now.to_date
+    )
+    token.update_column(:scopes, YAML.dump([]))
+    get '/users.xml', :headers => {'X-Redmine-API-Key' => plaintext}
+    assert_response :ok, 'empty scopes must be treated as unscoped, not as a fail-open filter'
+  end
 end

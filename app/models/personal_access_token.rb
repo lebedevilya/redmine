@@ -40,6 +40,11 @@ class PersonalAccessToken < ApplicationRecord
 
   belongs_to :user
 
+  # Symbols, not strings: Role#allowed_permissions (role.rb:304-311) intersects
+  # with Array#& against a symbol array, so string scopes would silently deny
+  # everything. Reuses core's own coder rather than a bare text column.
+  serialize :scopes, :coder => ::Role::PermissionsAttributeCoder
+
   validates_presence_of :name, :expires_on, :token_hash, :last_four
   validates_uniqueness_of :token_hash, :case_sensitive => true
   validate :validate_expires_on
@@ -118,6 +123,14 @@ class PersonalAccessToken < ApplicationRecord
 
   def display_value
     "#{PREFIX}…#{last_four}"
+  end
+
+  # An EMPTY array must not count as scoped. Role#allowed_permissions treats
+  # [].present? == false as "no filter" and returns every permission, while
+  # authorized_by_api_scope? would be true and strip admin. That combination
+  # fails open at the role layer. Only a non-empty scope is a scope.
+  def scoped?
+    scopes.present?
   end
 
   private

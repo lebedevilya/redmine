@@ -35,6 +35,11 @@ module Redmine
 
         token.touch_last_used!
         user.current_api_token = token
+        # Only assign when genuinely scoped. Assigning [] would set
+        # authorized_by_api_scope? true (stripping admin) while
+        # Role#allowed_permissions treats [] as "no filter" and returns every
+        # permission — a fail-open. See the spec, section 5.
+        user.api_scope = token.scopes if token.scoped?
         return user
       end
 
