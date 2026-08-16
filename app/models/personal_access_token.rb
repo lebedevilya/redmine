@@ -112,7 +112,17 @@ class PersonalAccessToken < ApplicationRecord
   def validate_expires_on
     return if expires_on.blank?
 
-    errors.add(:expires_on, :invalid) if expires_on <= User.current.today
+    if expires_on <= User.current.today
+      errors.add(:expires_on, :invalid)
+      return
+    end
+
+    max_days = Setting.pat_max_lifetime_days.to_i
+    return if max_days <= 0   # 0 means unlimited
+
+    if expires_on > User.current.today + max_days
+      errors.add(:expires_on, :invalid)
+    end
   end
 
   def deliver_security_notification_create

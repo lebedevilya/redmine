@@ -136,4 +136,32 @@ class PersonalAccessTokenTest < ActiveSupport::TestCase
     _token, plaintext = PersonalAccessToken.generate!(@user, :name => 'ci', :expires_on => 30.days.from_now.to_date)
     assert_not_includes ActionMailer::Base.deliveries.last.body.encoded, plaintext
   end
+
+  def test_expires_on_within_max_lifetime_is_valid
+    with_settings :pat_max_lifetime_days => '90' do
+      token = PersonalAccessToken.new(:user => @user, :name => 'x',
+                                      :expires_on => 30.days.from_now.to_date,
+                                      :token_hash => 'h', :last_four => 'abcd')
+      assert token.valid?
+    end
+  end
+
+  def test_expires_on_beyond_max_lifetime_is_invalid
+    with_settings :pat_max_lifetime_days => '90' do
+      token = PersonalAccessToken.new(:user => @user, :name => 'x',
+                                      :expires_on => 200.days.from_now.to_date,
+                                      :token_hash => 'h', :last_four => 'abcd')
+      assert_not token.valid?
+      assert_includes token.errors.attribute_names, :expires_on
+    end
+  end
+
+  def test_zero_max_lifetime_means_unlimited
+    with_settings :pat_max_lifetime_days => '0' do
+      token = PersonalAccessToken.new(:user => @user, :name => 'x',
+                                      :expires_on => 3650.days.from_now.to_date,
+                                      :token_hash => 'h', :last_four => 'abcd')
+      assert token.valid?
+    end
+  end
 end
