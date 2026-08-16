@@ -179,9 +179,15 @@ logs, so it deserves an audit row in its own right.
 
 Unit tests for model invariants, functional for authorization, integration for the authentication
 path — the last because it's the only place "it works" can be shown end-to-end rather than inferred.
-**64 test methods across 7 files.** Full Redmine suite green: `5557 runs, 24936 assertions, 0
-failures`, with one pre-existing environmental error unrelated to this diff (Gantt PNG export, missing
-ImageMagick font). RuboCop clean; migrations apply cleanly to an empty database.
+**64 test methods across 7 files.** Redmine's own CI workflows pass on this branch: the full suite
+green across **SQLite, MySQL and PostgreSQL × Ruby 3.2, 3.3 and 3.4**, plus the Chrome-driven system
+tests, RuboCop over all 1031 files, and `rails test:autoload`. Migrations apply cleanly to an empty
+database.
+
+The database matrix matters here: it is what turns "nothing in this diff is database-specific" from an
+assumption into a tested claim. The one CI job that fails is `bundle-audit`, reporting CVEs in
+`activesupport 7.2.3` — `Gemfile` and `Gemfile.lock` are untouched by this branch, so stock `6.1.2`
+fails it identically. Bumping Rails inside a feature MR would be scope creep.
 
 Five tests exist to catch silent failures and shouldn't be weakened: a legacy key still authenticates;
 a legacy key still works via `?key=`; an empty scope array doesn't grant full permissions; a scoped
