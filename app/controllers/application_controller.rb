@@ -129,6 +129,25 @@ class ApplicationController < ActionController::Base
     end
     if user.nil? && Setting.rest_api_enabled? && accept_api_auth?
       if (key = api_key_from_request)
+        # Personal access tokens are refused in the query string: query
+        # parameters are captured by reverse-proxy access logs, browser history
+        # and Referer headers, none of which config.filter_parameters can reach.
+        # params[:key] takes precedence in api_key_from_request, so its presence
+        # means the credential arrived in the URL. Legacy API keys are
+        # unaffected and still work here.
+        if params[:key].present? && PersonalAccessToken.value_format?(key)
+          message = l(:error_personal_access_token_in_query_string)
+          respond_to do |format|
+            format.html {render_error :message => message, :status => 401}
+            format.api do
+              @error_messages = [message]
+              render :template => 'common/error_messages', :format => [:api], :status => :unauthorized, :layout => nil
+            end
+            format.any {head :unauthorized}
+          end
+          return
+        end
+
         # Use API key
         user = Redmine::ApiAuthentication.authenticate(key)
       elsif access_token = Doorkeeper.authenticate(request)

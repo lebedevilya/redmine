@@ -33,6 +33,13 @@ class PersonalAccessToken < ApplicationRecord
   # Bounds write amplification to one UPDATE per token per hour.
   LAST_USED_PRECISION = 1.hour
 
+  # True if the presented string has the shape of a personal access token.
+  # Deliberately does NOT hit the database: this is reachable by
+  # unauthenticated callers and is only used to produce a helpful error.
+  def self.value_format?(presented)
+    VALUE_FORMAT.match?(presented.to_s)
+  end
+
   belongs_to :user
 
   validates_presence_of :name, :expires_on, :token_hash, :last_four

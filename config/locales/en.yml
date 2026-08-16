@@ -252,6 +252,7 @@ en:
   error_attachment_not_found: "Attachment %{name} not found"
   error_invalid_authenticity_token: "Invalid form authenticity token."
   error_query_statement_invalid: "An error occurred while executing the query and has been logged. Please report this error to your Redmine administrator."
+  error_personal_access_token_in_query_string: "Personal access tokens must be sent in the X-Redmine-API-Key header or as the HTTP Basic username, not in the URL."
 
   mail_subject_lost_password: "Your %{value} password"
   mail_body_lost_password: 'To change your password, click on the following link:'
