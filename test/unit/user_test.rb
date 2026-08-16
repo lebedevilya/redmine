@@ -1405,6 +1405,23 @@ class UserTest < ActiveSupport::TestCase
     assert u.authorized_by_oauth?
   end
 
+  def test_api_scope_writer_sets_the_filter
+    user = User.find(2)
+    user.api_scope = [:view_issues]
+    assert user.authorized_by_api_scope?
+  end
+
+  def test_oauth_scope_writer_still_works_as_an_alias
+    user = User.find(2)
+    user.oauth_scope = [:view_issues]
+    assert user.authorized_by_api_scope?
+    assert user.authorized_by_oauth?
+  end
+
+  def test_unscoped_user_is_not_flagged_as_scoped
+    assert_not User.find(2).authorized_by_api_scope?
+  end
+
   def test_admin_should_be_limited_by_oauth_scope
     u = User.find_by_admin(true)
     assert u.admin?

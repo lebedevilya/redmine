@@ -98,4 +98,39 @@ class PersonalAccessTokensControllerTest < Redmine::ControllerTest
     assert_response :not_found
     assert_not PersonalAccessToken.find(1).revoked?
   end
+
+  def test_new_renders_scope_checkboxes_grouped_by_module
+    get :new
+    assert_response :success
+    assert_select 'input[type=checkbox][name=?]', 'personal_access_token[scopes][]'
+  end
+
+  def test_create_with_scopes_stores_symbols
+    post :create, :params => {
+      :personal_access_token => {
+        :name => 'scoped', :expires_on => 30.days.from_now.to_date.to_s,
+        :scopes => ['view_issues', 'add_issues']
+      }
+    }
+    token = PersonalAccessToken.order(:id => :desc).first
+    assert_equal [:add_issues, :view_issues], token.scopes.sort
+    assert token.scopes.all?(Symbol)
+  end
+
+  def test_create_without_scopes_stores_unscoped_token
+    post :create, :params => {
+      :personal_access_token => {:name => 'full', :expires_on => 30.days.from_now.to_date.to_s}
+    }
+    assert_not PersonalAccessToken.order(:id => :desc).first.scoped?
+  end
+
+  def test_create_with_blank_scope_list_stores_unscoped_token
+    post :create, :params => {
+      :personal_access_token => {
+        :name => 'blank', :expires_on => 30.days.from_now.to_date.to_s, :scopes => ['']
+      }
+    }
+    assert_not PersonalAccessToken.order(:id => :desc).first.scoped?,
+               'a form-submitted empty scope list must not become a fail-open []'
+  end
 end
