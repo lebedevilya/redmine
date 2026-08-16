@@ -244,6 +244,13 @@ class Redmine::ApiTest::AuthenticationTest < Redmine::ApiTest::Base
     assert_response :forbidden
   end
 
+  def test_scoped_pat_is_accepted_on_a_public_permission_endpoint
+    PersonalAccessToken.find(1).update_column(:scopes, YAML.dump([:view_issues]))
+    get '/projects/1.json', :headers => {'X-Redmine-API-Key' => PAT_VALUE}
+    assert_response :ok, 'a scoped PAT must still be granted public permissions ' \
+      'like view_project, even when the scope array does not list them'
+  end
+
   def test_unscoped_pat_keeps_full_permissions
     admin_token, plaintext = PersonalAccessToken.generate!(
       User.find(1), :name => 'admin token', :expires_on => 30.days.from_now.to_date

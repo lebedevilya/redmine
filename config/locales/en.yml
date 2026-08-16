@@ -694,7 +694,6 @@ en:
   label_personal_access_token_plural: Personal access tokens
   label_personal_access_token_new: New personal access token
   label_personal_access_token_scopes: Scopes
-  label_personal_access_token_scope_read_only: Select read-only permissions
   label_personal_access_token_unscoped: Full access
   text_personal_access_token_scopes_info: "Leave all unchecked to grant the token your full permissions. Selecting scopes restricts the token to the intersection of your permissions and the selected ones."
   label_home: Home

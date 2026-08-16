@@ -39,7 +39,18 @@ module Redmine
         # authorized_by_api_scope? true (stripping admin) while
         # Role#allowed_permissions treats [] as "no filter" and returns every
         # permission — a fail-open. See the spec, section 5.
-        user.api_scope = token.scopes if token.scoped?
+        #
+        # Union in the public permissions (view_project, search_project,
+        # view_members). Role#allowed_permissions computes
+        # `(permissions + public_permissions) & scope` — an INTERSECTION —
+        # so any public permission missing from `scope` gets stripped even
+        # though it's meant to be always-on. The scope picker deliberately
+        # excludes public permissions from the user's choices (they aren't
+        # a meaningful selection), so without this union every scoped PAT
+        # would be denied public endpoints like GET /projects/:id. This
+        # mirrors how core's OAuth path seeds default_scopes with the same
+        # public permissions (config/initializers/30-redmine.rb).
+        user.api_scope = token.scopes | Redmine::AccessControl.public_permissions.map(&:name) if token.scoped?
         return user
       end
 
