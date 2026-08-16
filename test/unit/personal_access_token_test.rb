@@ -116,4 +116,24 @@ class PersonalAccessTokenTest < ActiveSupport::TestCase
   def test_display_value_masks_the_secret
     assert_equal 'rmpat_…aaaa', PersonalAccessToken.find(1).display_value
   end
+
+  def test_create_delivers_security_notification
+    User.current = @user
+    assert_difference 'ActionMailer::Base.deliveries.size', 1 do
+      PersonalAccessToken.generate!(@user, :name => 'ci', :expires_on => 30.days.from_now.to_date)
+    end
+  end
+
+  def test_revoke_delivers_security_notification
+    User.current = @user
+    assert_difference 'ActionMailer::Base.deliveries.size', 1 do
+      PersonalAccessToken.find(1).revoke!
+    end
+  end
+
+  def test_notification_never_contains_the_token_value
+    User.current = @user
+    _token, plaintext = PersonalAccessToken.generate!(@user, :name => 'ci', :expires_on => 30.days.from_now.to_date)
+    assert_not_includes ActionMailer::Base.deliveries.last.body.encoded, plaintext
+  end
 end

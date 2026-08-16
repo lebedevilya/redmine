@@ -275,6 +275,8 @@ en:
   mail_body_security_notification_remove: "%{field} %{value} was removed."
   mail_body_security_notification_notify_enabled: "Email address %{value} now receives notifications."
   mail_body_security_notification_notify_disabled: "Email address %{value} no longer receives notifications."
+  mail_body_security_notification_pat_add: "%{field} added: %{value}"
+  mail_body_security_notification_pat_revoke: "%{field} revoked: %{value}"
   mail_body_settings_updated: "The following settings were changed:"
   mail_body_password_updated: "Your password has been changed."
   mail_destroy_project_failed: Project %{value} could not be deleted.

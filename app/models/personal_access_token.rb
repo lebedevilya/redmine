@@ -39,6 +39,8 @@ class PersonalAccessToken < ApplicationRecord
   validates_uniqueness_of :token_hash, :case_sensitive => true
   validate :validate_expires_on
 
+  after_create_commit :deliver_security_notification_create
+
   safe_attributes 'name', 'expires_on'
 
   # Creates a token and returns [record, plaintext]. The plaintext is the only
@@ -89,6 +91,7 @@ class PersonalAccessToken < ApplicationRecord
 
   def revoke!
     update_column(:revoked_at, Time.current)
+    deliver_security_notification_revoke
     true
   end
 
@@ -110,5 +113,33 @@ class PersonalAccessToken < ApplicationRecord
     return if expires_on.blank?
 
     errors.add(:expires_on, :invalid) if expires_on <= User.current.today
+  end
+
+  def deliver_security_notification_create
+    deliver_security_notification(
+      :message => :mail_body_security_notification_pat_add,
+      :field   => :label_personal_access_token,
+      :value   => name
+    )
+  end
+
+  def deliver_security_notification_revoke
+    deliver_security_notification(
+      :message => :mail_body_security_notification_pat_revoke,
+      :field   => :label_personal_access_token,
+      :value   => name
+    )
+  end
+
+  # NOTE: value is the token NAME, never the secret.
+  def deliver_security_notification(options={})
+    Mailer.deliver_security_notification(
+      user,
+      User.current,
+      options.merge(
+        :title => :label_my_account,
+        :url   => {:controller => 'personal_access_tokens', :action => 'index'}
+      )
+    )
   end
 end
