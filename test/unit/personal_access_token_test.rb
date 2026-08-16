@@ -131,6 +131,18 @@ class PersonalAccessTokenTest < ActiveSupport::TestCase
     end
   end
 
+  def test_revoke_is_idempotent
+    User.current = @user
+    token = PersonalAccessToken.find(1)
+    token.revoke!
+    revoked_at = token.reload.revoked_at
+
+    assert_no_difference 'ActionMailer::Base.deliveries.size' do
+      assert_equal false, token.revoke!
+    end
+    assert_equal revoked_at, token.reload.revoked_at
+  end
+
   def test_notification_never_contains_the_token_value
     User.current = @user
     _token, plaintext = PersonalAccessToken.generate!(@user, :name => 'ci', :expires_on => 30.days.from_now.to_date)
@@ -138,7 +150,7 @@ class PersonalAccessTokenTest < ActiveSupport::TestCase
   end
 
   def test_expires_on_within_max_lifetime_is_valid
-    with_settings :pat_max_lifetime_days => '90' do
+    with_settings :personal_access_token_max_lifetime_days => '90' do
       token = PersonalAccessToken.new(:user => @user, :name => 'x',
                                       :expires_on => 30.days.from_now.to_date,
                                       :token_hash => 'h', :last_four => 'abcd')
@@ -147,7 +159,7 @@ class PersonalAccessTokenTest < ActiveSupport::TestCase
   end
 
   def test_expires_on_beyond_max_lifetime_is_invalid
-    with_settings :pat_max_lifetime_days => '90' do
+    with_settings :personal_access_token_max_lifetime_days => '90' do
       token = PersonalAccessToken.new(:user => @user, :name => 'x',
                                       :expires_on => 200.days.from_now.to_date,
                                       :token_hash => 'h', :last_four => 'abcd')
@@ -157,7 +169,7 @@ class PersonalAccessTokenTest < ActiveSupport::TestCase
   end
 
   def test_zero_max_lifetime_means_unlimited
-    with_settings :pat_max_lifetime_days => '0' do
+    with_settings :personal_access_token_max_lifetime_days => '0' do
       token = PersonalAccessToken.new(:user => @user, :name => 'x',
                                       :expires_on => 3650.days.from_now.to_date,
                                       :token_hash => 'h', :last_four => 'abcd')

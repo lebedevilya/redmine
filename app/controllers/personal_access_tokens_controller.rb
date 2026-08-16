@@ -32,10 +32,11 @@ class PersonalAccessTokensController < ApplicationController
   end
 
   def new
-    @token = PersonalAccessToken.new(:expires_on => 90.days.from_now.to_date)
+    @token = PersonalAccessToken.new(:expires_on => default_expires_on)
   end
 
   def create
+    params[:personal_access_token] ||= {}
     name       = params[:personal_access_token][:name]
     expires_on = params[:personal_access_token][:expires_on]
     @token, @plaintext = PersonalAccessToken.generate!(
@@ -59,5 +60,16 @@ class PersonalAccessTokensController < ApplicationController
     @token = User.current.personal_access_tokens.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render_404
+  end
+
+  # 90 days, clamped to the configured maximum lifetime when one is set
+  # (0 means unlimited). Prevents the form from opening pre-populated with
+  # a date that immediately fails validation.
+  def default_expires_on
+    default = 90.days.from_now.to_date
+    max_days = Setting.personal_access_token_max_lifetime_days.to_i
+    return default if max_days <= 0
+
+    [default, User.current.today + max_days].min
   end
 end

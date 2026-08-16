@@ -24,8 +24,6 @@
 # rather than per-row, and rejects underscores in its lookup guard. See
 # docs/superpowers/specs/2026-08-16-redmine-pat-design.md section 1.
 class PersonalAccessToken < ApplicationRecord
-  include Redmine::SafeAttributes
-
   PREFIX = 'rmpat_'
   # The presented credential: prefix + 64 hex chars (256 bits).
   VALUE_FORMAT = /\A#{PREFIX}[a-f0-9]{64}\z/
@@ -48,7 +46,11 @@ class PersonalAccessToken < ApplicationRecord
 
   after_create_commit :deliver_security_notification_create
 
-  safe_attributes 'name', 'expires_on'
+  # NOTE: there is no update path for this model (the controller reads
+  # params directly and #generate! takes explicit keyword arguments), so
+  # there is nothing to declare here. Reinstate a `safe_attributes`
+  # declaration (and `include Redmine::SafeAttributes`) if an update
+  # action using mass-assignment is ever added.
 
   # Creates a token and returns [record, plaintext]. The plaintext is the only
   # time the caller can ever see the secret; only its digest is stored.
@@ -89,7 +91,9 @@ class PersonalAccessToken < ApplicationRecord
   end
 
   def expired?
-    expires_on.present? && expires_on < User.current.today
+    return false if expires_on.blank?
+
+    expires_on < (user ? user.today : Date.today)
   end
 
   def revoked?
@@ -97,6 +101,8 @@ class PersonalAccessToken < ApplicationRecord
   end
 
   def revoke!
+    return false if revoked?
+
     update_column(:revoked_at, Time.current)
     deliver_security_notification_revoke
     true
@@ -124,7 +130,7 @@ class PersonalAccessToken < ApplicationRecord
       return
     end
 
-    max_days = Setting.pat_max_lifetime_days.to_i
+    max_days = Setting.personal_access_token_max_lifetime_days.to_i
     return if max_days <= 0   # 0 means unlimited
 
     if expires_on > User.current.today + max_days

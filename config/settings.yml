@@ -336,7 +336,7 @@ rest_api_enabled:
 jsonp_enabled:
   default: 0
   security_notifications: 1
-pat_max_lifetime_days:
+personal_access_token_max_lifetime_days:
   default: 365
   security_notifications: 1
 default_notification_option:

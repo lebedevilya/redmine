@@ -494,7 +494,7 @@ en:
   setting_issue_done_ratio_issue_status: Use the issue status
   setting_start_of_week: Start calendars on
   setting_rest_api_enabled: Enable REST web service
-  setting_pat_max_lifetime_days: Maximum personal access token lifetime (days)
+  setting_personal_access_token_max_lifetime_days: Maximum personal access token lifetime (days)
   setting_cache_formatted_text: Cache formatted text
   setting_default_notification_option: Default notification option
   setting_commit_logtime_enabled: Enable time logging

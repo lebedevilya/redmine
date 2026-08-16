@@ -44,6 +44,15 @@ class PersonalAccessTokensControllerTest < Redmine::ControllerTest
     assert_select 'input[name=?]', 'personal_access_token[name]'
   end
 
+  def test_new_clamps_prefilled_expiry_to_max_lifetime
+    with_settings :personal_access_token_max_lifetime_days => '30' do
+      get :new
+      assert_response :success
+      expected = 30.days.from_now.to_date.iso8601
+      assert_select 'input[name=?][value=?]', 'personal_access_token[expires_on]', expected
+    end
+  end
+
   def test_create_shows_plaintext_exactly_once
     assert_difference 'PersonalAccessToken.count', 1 do
       post :create, :params => {
@@ -58,6 +67,13 @@ class PersonalAccessTokensControllerTest < Redmine::ControllerTest
     get :index
     assert_select 'code.pat-value', 0
     assert_select 'td', :text => 'rmpat_…aaaa'
+  end
+
+  def test_create_without_params_does_not_error
+    assert_no_difference 'PersonalAccessToken.count' do
+      post :create
+    end
+    assert_response :success
   end
 
   def test_create_rejects_missing_name
