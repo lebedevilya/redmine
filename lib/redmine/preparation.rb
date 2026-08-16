@@ -273,6 +273,10 @@ module Redmine
         menu.push :enumerations, {:controller => 'enumerations'},
                   :icon => 'list',
                   :html => {:class => 'icon icon-list'}
+        menu.push :personal_access_tokens, {:controller => 'admin/personal_access_tokens'},
+                  :caption => :label_personal_access_token_plural,
+                  :icon => 'user',
+                  :html => {:class => 'icon icon-user'}
         menu.push :settings, {:controller => 'settings'},
                   :icon => 'settings',
                   :html => {:class => 'icon icon-settings'}
