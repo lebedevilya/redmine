@@ -36,11 +36,12 @@ class PersonalAccessTokensController < ApplicationController
   end
 
   def create
-    params[:personal_access_token] ||= {}
-    name       = params[:personal_access_token][:name]
-    expires_on = params[:personal_access_token][:expires_on]
+    attrs = params[:personal_access_token] || {}
     @token, @plaintext = PersonalAccessToken.generate!(
-      User.current, :name => name, :expires_on => expires_on
+      User.current,
+      :name       => attrs[:name],
+      :expires_on => attrs[:expires_on],
+      :scopes     => attrs[:scopes]
     )
     render :create
   rescue ActiveRecord::RecordInvalid => e
@@ -72,4 +73,9 @@ class PersonalAccessTokensController < ApplicationController
 
     [default, User.current.today + max_days].min
   end
+
+  def grouped_permissions
+    Redmine::AccessControl.permissions.reject(&:public?).group_by(&:project_module)
+  end
+  helper_method :grouped_permissions
 end

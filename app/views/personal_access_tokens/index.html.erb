@@ -9,6 +9,7 @@
     <th><%= l(:label_personal_access_token) %></th>
     <th><%= l(:field_expires_on) %></th>
     <th><%= l(:label_last_used) %></th>
+    <th><%= l(:label_personal_access_token_scopes) %></th>
     <th></th>
   </tr></thead>
   <tbody>
@@ -18,6 +19,7 @@
       <td><%= h token.display_value %></td>
       <td><%= format_date token.expires_on %></td>
       <td><%= token.last_used_at ? format_time(token.last_used_at) : '-' %></td>
+      <td><%= token.scoped? ? token.scopes.size : l(:label_personal_access_token_unscoped) %></td>
       <td>
         <% unless token.revoked? %>
           <%= link_to l(:button_revoke), revoke_personal_access_token_path(token),

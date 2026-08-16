@@ -6,5 +6,27 @@
     <p><%= f.text_field :name, :required => true, :size => 40 %></p>
     <p><%= f.date_field :expires_on, :required => true %></p>
   </div>
+  <fieldset class="box">
+    <legend><%= l(:label_personal_access_token_scopes) %></legend>
+    <p class="info"><%= l(:text_personal_access_token_scopes_info) %></p>
+    <p>
+      <%= link_to_function l(:label_personal_access_token_scope_read_only),
+            "$('input[name=\"personal_access_token[scopes][]\"]').prop('checked', false); " \
+            "$('input.pat-read-scope').prop('checked', true);" %>
+    </p>
+    <% grouped_permissions.each do |mod, permissions| %>
+      <fieldset>
+        <legend><%= mod.blank? ? l(:label_general) : l_or_humanize(mod, :prefix => 'project_module_') %></legend>
+        <% permissions.each do |permission| %>
+          <label>
+            <%= check_box_tag 'personal_access_token[scopes][]', permission.name, false,
+                  :id => "pat_scope_#{permission.name}",
+                  :class => ('pat-read-scope' if permission.read?) %>
+            <%= l_or_humanize(permission.name, :prefix => 'permission_') %>
+          </label><br />
+        <% end %>
+      </fieldset>
+    <% end %>
+  </fieldset>
   <%= submit_tag l(:button_create) %>
 <% end %>
