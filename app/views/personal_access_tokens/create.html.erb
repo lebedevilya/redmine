@@ -1,0 +1,8 @@
+<h2><%= l(:label_personal_access_token_new) %></h2>
+
+<div class="warning">
+  <p><%= l(:text_personal_access_token_shown_once) %></p>
+  <p><code class="pat-value"><%= h @plaintext %></code></p>
+</div>
+
+<p><%= link_to l(:button_back), personal_access_tokens_path %></p>

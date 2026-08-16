@@ -115,6 +115,10 @@ Rails.application.routes.draw do
   match 'my/twofa/backup_codes', :controller => 'twofa_backup_codes', :action => 'show', :via => [:get]
   match 'users/:user_id/twofa/deactivate', :controller => 'twofa', :action => 'admin_deactivate', :via => :post
 
+  resources :personal_access_tokens, :only => [:index, :new, :create] do
+    post 'revoke', :on => :member
+  end
+
   match '/users/context_menu', to: 'context_menus#users', as: :users_context_menu, via: [:get, :post]
   resources :users do
     collection do
@@ -383,6 +387,12 @@ Rails.application.routes.draw do
   post 'admin/default_configuration', :to => 'admin#default_configuration'
 
   match '/admin/projects_context_menu', :to => 'context_menus#projects', :as => 'projects_context_menu', :via => [:get, :post]
+
+  namespace :admin do
+    resources :personal_access_tokens, :only => [:index] do
+      post 'revoke', :on => :member
+    end
+  end
 
   resources :auth_sources do
     member do

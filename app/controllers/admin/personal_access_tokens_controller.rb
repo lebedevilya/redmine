@@ -1,0 +1,40 @@
+# frozen_string_literal: true
+
+# Redmine - project management software
+# Copyright (C) 2006-  Jean-Philippe Lang
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+class Admin::PersonalAccessTokensController < ApplicationController
+  layout 'admin'
+  self.main_menu = false
+
+  before_action :require_admin
+
+  # Revoking another user's credential is a security mutation, so it gets the
+  # same password reconfirmation the self-service controller applies. Without
+  # this, a reused or unattended admin session can revoke anyone's API access.
+  require_sudo_mode :revoke
+
+  def index
+    @tokens = PersonalAccessToken.includes(:user).order(:created_at => :desc)
+  end
+
+  def revoke
+    PersonalAccessToken.find(params[:id]).revoke!
+    flash[:notice] = l(:notice_successful_update)
+    redirect_to admin_personal_access_tokens_path
+  end
+end

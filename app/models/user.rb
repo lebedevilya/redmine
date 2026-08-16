@@ -97,6 +97,7 @@ class User < Principal
                           :after_add    => Proc.new {|user, group| group.user_added(user)},
                           :after_remove => Proc.new {|user, group| group.user_removed(user)}
   has_many :changesets, :dependent => :nullify
+  has_many :personal_access_tokens, :dependent => :destroy
   has_one :preference, :dependent => :destroy, :class_name => 'UserPreference'
   has_one :atom_token, lambda {where "#{table.name}.action='feeds'"}, :class_name => 'Token'
   has_one :api_token, lambda {where "#{table.name}.action='api'"}, :class_name => 'Token'
@@ -113,6 +114,9 @@ class User < Principal
   attr_accessor :last_before_login_on
   attr_accessor :remote_ip
   attr_writer   :oauth_scope
+  # Ephemeral: the PAT this request authenticated with, if any. Not persisted,
+  # same pattern as remote_ip.
+  attr_accessor :current_api_token
 
   LOGIN_LENGTH_LIMIT = 60
   MAIL_LENGTH_LIMIT = 254

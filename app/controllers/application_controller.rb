@@ -129,8 +129,24 @@ class ApplicationController < ActionController::Base
     end
     if user.nil? && Setting.rest_api_enabled? && accept_api_auth?
       if (key = api_key_from_request)
+        # Personal access tokens are refused in the query string: query
+        # parameters are captured by reverse-proxy access logs, browser history
+        # and Referer headers, none of which config.filter_parameters can reach.
+        # params[:key] takes precedence in api_key_from_request, so its presence
+        # means the credential arrived in the URL. Legacy API keys are
+        # unaffected and still work here.
+        if params[:key].present? && PersonalAccessToken.value_format?(key)
+          message = l(:error_personal_access_token_in_query_string)
+          respond_to do |format|
+            format.html {render_error :message => message, :status => 401}
+            format.api {render_api_errors message, :status => :unauthorized}
+            format.any {head :unauthorized}
+          end
+          return
+        end
+
         # Use API key
-        user = User.find_by_api_key(key)
+        user = Redmine::ApiAuthentication.authenticate(key)
       elsif access_token = Doorkeeper.authenticate(request)
         # Oauth
         if access_token.accessible?
@@ -149,7 +165,7 @@ class ApplicationController < ActionController::Base
             return
           end
 
-          user ||= User.find_by_api_key(username)
+          user ||= Redmine::ApiAuthentication.authenticate(username)
         end
         if user && user.must_change_password?
           render_error :message => 'You must change your password', :status => 403
@@ -774,9 +790,9 @@ class ApplicationController < ActionController::Base
     render_api_errors(messages)
   end
 
-  def render_api_errors(*messages)
+  def render_api_errors(*messages, status: :unprocessable_content)
     @error_messages = messages.flatten
-    render :template => 'common/error_messages', :format => [:api], :status => :unprocessable_content, :layout => nil
+    render :template => 'common/error_messages', :format => [:api], :status => status, :layout => nil
   end
 
   # Overrides #_include_layout? so that #render with no arguments
