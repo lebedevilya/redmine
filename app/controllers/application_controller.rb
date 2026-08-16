@@ -130,7 +130,7 @@ class ApplicationController < ActionController::Base
     if user.nil? && Setting.rest_api_enabled? && accept_api_auth?
       if (key = api_key_from_request)
         # Use API key
-        user = User.find_by_api_key(key)
+        user = Redmine::ApiAuthentication.authenticate(key)
       elsif access_token = Doorkeeper.authenticate(request)
         # Oauth
         if access_token.accessible?
@@ -149,7 +149,7 @@ class ApplicationController < ActionController::Base
             return
           end
 
-          user ||= User.find_by_api_key(username)
+          user ||= Redmine::ApiAuthentication.authenticate(username)
         end
         if user && user.must_change_password?
           render_error :message => 'You must change your password', :status => 403

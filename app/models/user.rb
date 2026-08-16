@@ -113,6 +113,9 @@ class User < Principal
   attr_accessor :last_before_login_on
   attr_accessor :remote_ip
   attr_writer   :oauth_scope
+  # Ephemeral: the PAT this request authenticated with, if any. Not persisted,
+  # same pattern as remote_ip.
+  attr_accessor :current_api_token
 
   LOGIN_LENGTH_LIMIT = 60
   MAIL_LENGTH_LIMIT = 254
