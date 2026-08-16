@@ -86,7 +86,14 @@ scope array and `Role#allowed_to?` intersects role permissions with it. A scoped
 value, using the same permission-name vocabulary Doorkeeper exposes. Scopes only ever *restrict*;
 selecting a permission your roles lack yields an empty intersection, never an escalation.
 
-Three subtleties, each with a test pinning it:
+Four subtleties, each with a test pinning it:
+
+- **Public permissions are granted implicitly.** `Role#allowed_permissions` intersects the scope
+  against role permissions *plus* `public_permissions` (`:view_project`, `:search_project`,
+  `:view_members`). Those aren't meaningful user choices, so they're kept out of the picker — but that
+  means the intersection would strip them, and every scoped token would 403 on `GET /projects/:id.json`
+  and `/search`. They're unioned into the scope at authentication, exactly as core's OAuth path seeds
+  them via `default_scopes`.
 
 - The field was renamed `oauth_scope` → `api_scope` (aliases retained) in its own pure-rename commit,
   since `authorized_by_oauth?` would otherwise lie about a non-OAuth credential.
@@ -193,6 +200,16 @@ The review loop caught three fail-opens the tests as written would not have: str
 full-access tokens (found and reproduced one task before the scope form would have made it live); a
 security test that could not fail; and an unsatisfiable instruction in my own plan (add a link to the
 admin index — that view is menu-driven, so the link would never have reached the sidebar).
+
+Two further defects came from external review after the MRs were opened, and both are worth recording
+because the tests as written could not have caught either. Scoped tokens were losing Redmine's
+*public* permissions to the scope intersection, so every scoped token would have 403'd on
+`GET /projects/:id.json` — the existing scope test passed only because it happened to exercise
+`:view_issues`, a non-public permission. And the scope picker offered a "read-only" preset built on
+`permission.read?`, which in Redmine means *"still permitted on a closed project"* rather than
+*"only reads"* — `:close_project` and `:delete_project` both carry that flag, so the preset would have
+minted a token able to delete projects. The preset was removed rather than patched with an exclusion
+list, since Redmine exposes no reliable read-only signal and a hand-maintained list would drift.
 
 Two decisions changed during implementation and are documented above rather than quietly reversed:
 refusing tokens in the query string, and cutting pillar 4.
