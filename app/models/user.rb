@@ -113,7 +113,8 @@ class User < Principal
   attr_accessor :password, :password_confirmation, :generate_password
   attr_accessor :last_before_login_on
   attr_accessor :remote_ip
-  attr_writer   :oauth_scope
+  attr_writer   :api_scope
+  alias_method :oauth_scope=, :api_scope=
   # Ephemeral: the PAT this request authenticated with, if any. Not persisted,
   # same pattern as remote_ip.
   attr_accessor :current_api_token
@@ -738,18 +739,20 @@ class User < Principal
   end
 
   def admin?
-    if authorized_by_oauth?
+    if authorized_by_api_scope?
       # when signed in via oauth, the user only acts as admin when the admin scope is set
-      super and @oauth_scope.include?(:admin)
+      super and @api_scope.include?(:admin)
     else
       super
     end
   end
 
-  # true if the user has signed in via oauth
-  def authorized_by_oauth?
-    !@oauth_scope.nil?
+  # true if the request was authorized by a scoped credential (OAuth token or
+  # scoped personal access token)
+  def authorized_by_api_scope?
+    !@api_scope.nil?
   end
+  alias_method :authorized_by_oauth?, :authorized_by_api_scope?
 
   # Return true if the user is allowed to do the specified action on a specific context
   # Action can be:
@@ -771,7 +774,7 @@ class User < Principal
 
       roles.any? do |role|
         (context.is_public? || role.member?) &&
-        role.allowed_to?(action, @oauth_scope) &&
+        role.allowed_to?(action, @api_scope) &&
         (block ? yield(role, self) : true)
       end
     elsif context && context.is_a?(Array)
@@ -790,7 +793,7 @@ class User < Principal
       # authorize if user has at least one role that has this permission
       roles = self.roles.to_a | [builtin_role]
       roles.any? do |role|
-        role.allowed_to?(action, @oauth_scope) &&
+        role.allowed_to?(action, @api_scope) &&
         (block ? yield(role, self) : true)
       end
     else
