@@ -23,6 +23,11 @@ class Admin::PersonalAccessTokensController < ApplicationController
 
   before_action :require_admin
 
+  # Revoking another user's credential is a security mutation, so it gets the
+  # same password reconfirmation the self-service controller applies. Without
+  # this, a reused or unattended admin session can revoke anyone's API access.
+  require_sudo_mode :revoke
+
   def index
     @tokens = PersonalAccessToken.includes(:user).order(:created_at => :desc)
   end
