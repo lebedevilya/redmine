@@ -139,10 +139,7 @@ class ApplicationController < ActionController::Base
           message = l(:error_personal_access_token_in_query_string)
           respond_to do |format|
             format.html {render_error :message => message, :status => 401}
-            format.api do
-              @error_messages = [message]
-              render :template => 'common/error_messages', :format => [:api], :status => :unauthorized, :layout => nil
-            end
+            format.api {render_api_errors message, :status => :unauthorized}
             format.any {head :unauthorized}
           end
           return
@@ -793,9 +790,9 @@ class ApplicationController < ActionController::Base
     render_api_errors(messages)
   end
 
-  def render_api_errors(*messages)
+  def render_api_errors(*messages, status: :unprocessable_content)
     @error_messages = messages.flatten
-    render :template => 'common/error_messages', :format => [:api], :status => :unprocessable_content, :layout => nil
+    render :template => 'common/error_messages', :format => [:api], :status => status, :layout => nil
   end
 
   # Overrides #_include_layout? so that #render with no arguments

@@ -186,21 +186,17 @@ class Redmine::ApiTest::AuthenticationTest < Redmine::ApiTest::Base
     assert_not_include PAT_VALUE, response.body
   end
 
+  def test_api_should_never_echo_the_token_when_refusing_it_in_html_format
+    get '/users/current', :params => {:key => PAT_VALUE}
+    assert_response :unauthorized
+    assert_not_include PAT_VALUE, response.body
+  end
+
   def test_api_should_still_accept_legacy_api_key_in_key_param
     user = User.find(2)
     get '/users/current.xml', :params => {:key => user.api_key}
     assert_response :ok
     assert_select 'user id', :text => '2'
-  end
-
-  def test_api_should_still_accept_pat_in_header
-    get '/users/current.xml', :headers => {'X-Redmine-API-Key' => PAT_VALUE}
-    assert_response :ok
-  end
-
-  def test_api_should_still_accept_pat_in_http_basic_username_slot
-    get '/users/current.xml', :headers => credentials(PAT_VALUE, 'x')
-    assert_response :ok
   end
 
   def test_api_should_accept_pat_in_http_basic_username_slot
