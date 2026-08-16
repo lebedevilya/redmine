@@ -333,6 +333,7 @@ en:
   field_passwd_changed_on: Password last changed
   field_language: Language
   field_effective_date: Due date
+  field_expires_on: Expires on
   field_password: Password
   field_current_password: Current password
   field_new_password: New password
@@ -685,6 +686,9 @@ en:
   label_register: Register
   label_password_lost: Lost password
   label_password_required: Confirm your password to continue
+  label_personal_access_token: Personal access token
+  label_personal_access_token_plural: Personal access tokens
+  label_personal_access_token_new: New personal access token
   label_home: Home
   label_my_page: My page
   label_my_account: My account
@@ -822,6 +826,7 @@ en:
   label_yesterday: yesterday
   label_tomorrow: tomorrow
   label_this_week: this week
+  label_last_used: Last used
   label_last_week: last week
   label_next_week: next week
   label_last_n_weeks: "last %{count} weeks"
@@ -1216,6 +1221,7 @@ en:
   button_unarchive: Unarchive
   button_reset: Reset
   button_rename: Rename
+  button_revoke: Revoke
   button_change_password: Change password
   button_copy: Copy
   button_copy_and_follow: Copy and follow
@@ -1337,6 +1343,7 @@ en:
   text_wiki_page_destroy_children: "Delete child pages and all their descendants"
   text_wiki_page_reassign_children: "Reassign child pages to this parent page"
   text_own_membership_delete_confirmation: "You are about to remove some or all of your permissions and may no longer be able to edit this project after that.\nAre you sure you want to continue?"
+  text_personal_access_token_shown_once: "Copy this token now. For security it is stored hashed and will never be shown again."
   text_zoom_in: Zoom in
   text_zoom_out: Zoom out
   text_warn_on_leaving_unsaved: "The current page contains unsaved text that will be lost if you leave this page."

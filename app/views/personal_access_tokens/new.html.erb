@@ -1,0 +1,10 @@
+<h2><%= l(:label_personal_access_token_new) %></h2>
+
+<%= labelled_form_for @token, :url => personal_access_tokens_path, :method => :post do |f| %>
+  <%= error_messages_for @token %>
+  <div class="box tabular">
+    <p><%= f.text_field :name, :required => true, :size => 40 %></p>
+    <p><%= f.date_field :expires_on, :required => true %></p>
+  </div>
+  <%= submit_tag l(:button_create) %>
+<% end %>

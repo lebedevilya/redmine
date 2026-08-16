@@ -1,0 +1,33 @@
+<h2><%= l(:label_personal_access_token_plural) %></h2>
+
+<p><%= link_to l(:label_personal_access_token_new), new_personal_access_token_path, :class => 'icon icon-add' %></p>
+
+<% if @tokens.any? %>
+<table class="list">
+  <thead><tr>
+    <th><%= l(:field_name) %></th>
+    <th><%= l(:label_personal_access_token) %></th>
+    <th><%= l(:field_expires_on) %></th>
+    <th><%= l(:label_last_used) %></th>
+    <th></th>
+  </tr></thead>
+  <tbody>
+  <% @tokens.each do |token| %>
+    <tr class="<%= 'revoked' if token.revoked? %>">
+      <td><%= h token.name %></td>
+      <td><%= h token.display_value %></td>
+      <td><%= format_date token.expires_on %></td>
+      <td><%= token.last_used_at ? format_time(token.last_used_at) : '-' %></td>
+      <td>
+        <% unless token.revoked? %>
+          <%= link_to l(:button_revoke), revoke_personal_access_token_path(token),
+                      :method => :post, :class => 'icon icon-del' %>
+        <% end %>
+      </td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
+<% else %>
+<p class="nodata"><%= l(:label_no_data) %></p>
+<% end %>

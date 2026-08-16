@@ -97,6 +97,7 @@ class User < Principal
                           :after_add    => Proc.new {|user, group| group.user_added(user)},
                           :after_remove => Proc.new {|user, group| group.user_removed(user)}
   has_many :changesets, :dependent => :nullify
+  has_many :personal_access_tokens, :dependent => :destroy
   has_one :preference, :dependent => :destroy, :class_name => 'UserPreference'
   has_one :atom_token, lambda {where "#{table.name}.action='feeds'"}, :class_name => 'Token'
   has_one :api_token, lambda {where "#{table.name}.action='api'"}, :class_name => 'Token'
