@@ -36,6 +36,11 @@ class AdminControllerTest < Redmine::ControllerTest
     assert_select 'div.nodata'
   end
 
+  def test_index_should_link_to_personal_access_tokens_admin_panel
+    get :index
+    assert_select "a[href=?]", admin_personal_access_tokens_path
+  end
+
   def test_projects_should_show_only_active_projects_by_default
     p = Project.find(1)
     p.update_column :status, 5

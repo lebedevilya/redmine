@@ -41,6 +41,8 @@ class Admin::PersonalAccessTokensControllerTest < Redmine::ControllerTest
   def test_index_never_shows_token_values
     get :index
     assert_select 'code.pat-value', 0
+    assert_select 'td', :text => 'rmpat_…aaaa'
+    assert_not_includes @response.body, "rmpat_#{'a' * 64}"
   end
 
   def test_admin_can_revoke_any_users_token
