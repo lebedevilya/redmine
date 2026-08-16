@@ -1,0 +1,11 @@
+---
+personal_access_token_001:
+  id: 1
+  user_id: 2
+  name: CI pipeline
+  # SHA256 of "rmpat_" + "a" * 64 — see test/unit/personal_access_token_test.rb
+  token_hash: 75d755e22feff3944a3fde6940768294eb3a4cdf14980c7e5f6792aa633f8e4e
+  last_four: aaaa
+  expires_on: 2099-01-01
+  created_at: 2026-01-01 00:00:00 +00:00
+  updated_at: 2026-01-01 00:00:00 +00:00
